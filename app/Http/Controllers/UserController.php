@@ -9,13 +9,28 @@ use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
-    /**
-     * Método para listar todos los usuarios con filtros, ordenamiento y paginación
-     */
+    // Método para listar todos los usuarios
     public function index()
     {
-        $users = User::included()->filter()->sort()->getOrPaginate();
-        return response()->json($users);
+  
+    
+      //  $users = User::included()->filter()->sort()->getOrPaginate();
+       // return response()->json($users);
+    
+        return response()->json (User::all());
+       // return response()->json(User::all(), 200);
+       // $users = User::included()->filter()->get();
+       // return response()->json($users);
+        // Recupera todos los usuarios con relaciones incluidas
+        // $users = User::included()->get();
+
+        // Aplica filtros si están definidos en la query y vuelve a obtener usuarios
+       // $users = User::included()->filter()->get();
+
+        // Retorna la lista de usuarios en formato JSON
+       //return response()->json($users);
+
+       
     }
 
     /**
@@ -26,64 +41,49 @@ class UserController extends Controller
         $request->validate([
             'firstname' => 'required|max:255',
             'lastname'  => 'required|max:255',
-            'email'     => 'required|email|unique:users,email|max:255',
+            'email'     => 'required|max:255',
             'location'  => 'required|max:255',
-            'password'  => 'required|min:6|max:255',
+            'password'  => 'required|max:255',
         ]);
 
-        $data = $request->all();
-        $data['password'] = Hash::make($request->password);
+        $user = User::create($request->all());
 
-        $user = User::create($data);
-
-        return response()->json($user, 201);
-    }
-
-    /**
-     * Muestra un usuario específico por su ID con relaciones incluidas
-     */
-    public function show($id)
-    {
-        $user = User::included()->findOrFail($id);
         return response()->json($user);
     }
 
     /**
-     * Actualiza los datos de un usuario existente
+     * Muestra un usuario específico por su ID.
      */
-    public function update(Request $request, $id)
+    public function show($id)
     {
-        $user = User::find($id);
-
-        if (!$user) {
-            return response()->json(['message' => 'Usuario no encontrado'], 404);
-        }
-
-        $request->validate([
-            'firstname' => 'required|max:255',
-            'lastname'  => 'required|max:255',
-            'email'     => 'required|email|max:255|unique:users,email,' . $user->id,
-            'location'  => 'required|max:255',
-            'password'  => 'nullable|min:6|max:255',
-        ]);
-
-        $data = $request->all();
-        
-        // Solo actualizar la contraseña si se proporciona
-        if ($request->filled('password')) {
-            $data['password'] = Hash::make($request->password);
-        } else {
-            unset($data['password']);
-        }
-
-        $user->update($data);
-
-        return response()->json($user, 200);
+        $user = User::findOrFail($id);
+        return response()->json($user);
     }
 
-    /**
-     * Elimina un usuario de la base de datos
-     */
+    // Actualiza los datos de un usuario existente
+   public function update(Request $request, $id)
+{
+    $request->validate([
+        'firstname' => 'required|max:255',
+        'lastname'  => 'required|max:255',
+        'email'     => 'required|max:255',
+        'location'  => 'required|max:255',
+        'password'  => 'required|max:255',
+    ]);
+
+    $user = User::find($id);
+
+    if (!$user) {
+        return response()->json(['message' => 'Usuario no encontrado'], 404);
+    }
+
+    $user->update($request->all());
+
+    return response()->json($user, 200);
+}
+
+    // Elimina un usuario de la base de datos
+
     public function destroy($id)
     {
         $user = User::find($id);
@@ -96,4 +96,5 @@ class UserController extends Controller
 
         return response()->json(['message' => 'Usuario eliminado'], 200);
     }
+
 }
