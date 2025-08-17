@@ -12,6 +12,11 @@ class UserController extends Controller
     // Método para listar todos los usuarios
     public function index()
     {
+  
+    
+      //  $users = User::included()->filter()->sort()->getOrPaginate();
+       // return response()->json($users);
+    
         return response()->json (User::all());
        // return response()->json(User::all(), 200);
        // $users = User::included()->filter()->get();
