@@ -7,20 +7,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-
-
-
 class User extends Authenticatable
 {
-protected $primaryKey = 'id_user';
-
-
-    public function profile()
-{
-    return $this->hasOne(Profile::class, 'user_id', 'id_user');
-}
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
+
+ 
+    
+    public function profile()
+    {
+        return $this->hasOne(Profile::class, 'user_id', 'id'); // También cambié aquí de 'id_user' a 'id'
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -32,6 +29,7 @@ protected $primaryKey = 'id_user';
         'lastname',
         'email',
         'location',
+        'password',
     ];
 
     /**
@@ -56,6 +54,4 @@ protected $primaryKey = 'id_user';
             'password' => 'hashed',
         ];
     }
-
-    
 }

@@ -5,74 +5,91 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
-    // GET /api/users
+    // Método para listar todos los usuarios
     public function index()
     {
-        return response()->json(User::all(), 200);
+        return response()->json (User::all());
+       // return response()->json(User::all(), 200);
+       // $users = User::included()->filter()->get();
+       // return response()->json($users);
+        // Recupera todos los usuarios con relaciones incluidas
+        // $users = User::included()->get();
+
+        // Aplica filtros si están definidos en la query y vuelve a obtener usuarios
+       // $users = User::included()->filter()->get();
+
+        // Retorna la lista de usuarios en formato JSON
+       //return response()->json($users);
+
+       
     }
 
-    // POST /api/users
+    /**
+     * Guarda un nuevo usuario en la base de datos.
+     */
     public function store(Request $request)
     {
         $request->validate([
-            'firstname' => 'required|string',
-            'lastname'  => 'required|string',
-            'email'     => 'required|email|unique:users,email',
-            'location'  => 'required|string',
-            'password'  => 'required|min:6',
-            'role_id'   => 'required|exists:roles,id',
+            'firstname' => 'required|max:255',
+            'lastname'  => 'required|max:255',
+            'email'     => 'required|max:255',
+            'location'  => 'required|max:255',
+            'password'  => 'required|max:255',
         ]);
 
-        $user = User::create([
-            'firstname' => $request->firstname,
-            'lastname'  => $request->lastname,
-            'email'     => $request->email,
-            'location'  => $request->location,
-            'password'  => Hash::make($request->password),
-            'role_id'   => $request->role_id,
-        ]);
+        $user = User::create($request->all());
 
-        return response()->json($user, 201);
+        return response()->json($user);
     }
 
-    // GET /api/users/{id}
+    /**
+     * Muestra un usuario específico por su ID.
+     */
     public function show($id)
     {
         $user = User::findOrFail($id);
-        return response()->json($user, 200);
+        return response()->json($user);
     }
 
-    // PUT /api/users/{id}
-    public function update(Request $request, $id)
-    {
-        $user = User::findOrFail($id);
+    // Actualiza los datos de un usuario existente
+   public function update(Request $request, $id)
+{
+    $request->validate([
+        'firstname' => 'required|max:255',
+        'lastname'  => 'required|max:255',
+        'email'     => 'required|max:255',
+        'location'  => 'required|max:255',
+        'password'  => 'required|max:255',
+    ]);
 
-        $request->validate([
-            'email' => 'email|unique:users,email,' . $id,
-            'role_id' => 'exists:roles,id',
-        ]);
+    $user = User::find($id);
 
-        $user->update([
-            'firstname' => $request->firstname ?? $user->firstname,
-            'lastname'  => $request->lastname ?? $user->lastname,
-            'email'     => $request->email ?? $user->email,
-            'location'  => $request->location ?? $user->location,
-            'password'  => $request->password ? Hash::make($request->password) : $user->password,
-            'role_id'   => $request->role_id ?? $user->role_id,
-        ]);
-
-        return response()->json($user, 200);
+    if (!$user) {
+        return response()->json(['message' => 'Usuario no encontrado'], 404);
     }
 
-    // DELETE /api/users/{id}
+    $user->update($request->all());
+
+    return response()->json($user, 200);
+}
+
+    // Elimina un usuario de la base de datos
+
     public function destroy($id)
     {
-        $user = User::findOrFail($id);
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        }
+
         $user->delete();
 
-        return response()->json(['message' => 'User deleted'], 200);
+        return response()->json(['message' => 'Usuario eliminado'], 200);
     }
+
 }
