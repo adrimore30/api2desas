@@ -13,6 +13,8 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
 protected $primaryKey = 'id_user';
+
+
     public function profile()
 {
     return $this->hasOne(Profile::class, 'user_id', 'id_user');
@@ -26,9 +28,10 @@ protected $primaryKey = 'id_user';
      * @var list<string>
      */
     protected $fillable = [
-        'name',
+        'firstname',
+        'lastname',
         'email',
-        'password',
+        'location',
     ];
 
     /**
@@ -53,4 +56,6 @@ protected $primaryKey = 'id_user';
             'password' => 'hashed',
         ];
     }
+
+    
 }
