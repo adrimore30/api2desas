@@ -17,7 +17,6 @@ class UserSeeder extends Seeder
             'lastname' => 'User',
             'email' => 'admin@example.com',
             'location' => 'Central Office',
-            'email_verified_at' => now(),
             'password' => Hash::make('password'),
             'remember_token' => Str::random(10),
         ]);
@@ -28,7 +27,6 @@ class UserSeeder extends Seeder
             'lastname' => 'User',
             'email' => 'user@example.com',
             'location' => 'Branch Office',
-            'email_verified_at' => now(),
             'password' => Hash::make('password'),
             'remember_token' => Str::random(10),
         ]);
