@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Publication extends Model
 {
+    use HasFactory;
 
     protected $table = 'publications';
     protected $primaryKey = 'publication_id';
@@ -38,14 +39,13 @@ class Publication extends Model
         return $this->hasMany(Notification::class, 'publication_id', 'publication_id');
     }
 
-    // Scope para incluir relaciones
+    // Scope para incluir relaciones dinámicamente
     public function scopeInclude($query, $includes)
     {
         if (empty($includes)) {
             return $query;
         }
 
-        // Si viene como string separado por comas, lo convertimos en array
         if (is_string($includes)) {
             $includes = explode(',', $includes);
         }
@@ -61,10 +61,9 @@ class Publication extends Model
         return $query;
     }
 
-    // Scope para filtrar resultados
+    // Scope para filtros dinámicos
     public function scopeFilter($query, $filters)
     {
-        // Si los filtros vienen dentro de "filter", entramos ahí
         if (isset($filters['filter'])) {
             $filters = $filters['filter'];
         }
@@ -86,25 +85,5 @@ class Publication extends Model
         }
 
         return $query;
-      
-    use HasFactory;
-
-    protected $fillable = [
-        'title_publication','type_publication','severity_publication',
-        'location_publication','description_publication','url_imagen',
-        'date_publication','profile_id'
-    ];
-
-    public function profile() {
-        return $this->belongsTo(Profile::class);
-    }
-
-    public function categories() {
-        return $this->belongsToMany(Category::class, 'publications_categories');
-    }
-
-    public function notifications() {
-        return $this->hasMany(Notification::class);
-
     }
 }
