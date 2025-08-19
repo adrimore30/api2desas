@@ -43,6 +43,11 @@ class Publication extends Model
             return $query;
         }
 
+        // Si viene como string separado por comas, lo convertimos en array
+        if (is_string($includes)) {
+            $includes = explode(',', $includes);
+        }
+
         $allowedIncludes = ['profile', 'categories', 'notifications'];
 
         foreach ($includes as $include) {
@@ -57,6 +62,11 @@ class Publication extends Model
     // Scope para filtrar resultados
     public function scopeFilter($query, $filters)
     {
+        // Si los filtros vienen dentro de "filter", entramos ahí
+        if (isset($filters['filter'])) {
+            $filters = $filters['filter'];
+        }
+
         if (isset($filters['title'])) {
             $query->where('title_publication', 'like', '%' . $filters['title'] . '%');
         }

@@ -4,11 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Publication;
 use Illuminate\Http\Request;
+use App\Http\Resources\PublicationResource;
 
 class PublicationController extends Controller
 {
     /**
-     * Listar todas las publicaciones con filtros e includes.
+     * Listar todas las publicaciones con filtros e includes
      */
     public function index(Request $request)
     {
@@ -17,19 +18,27 @@ class PublicationController extends Controller
             ->filter($request->query())
             ->get();
 
-        return response()->json($publications);
+        // Usamos el resource para devolver campos con nombres bonitos
+        return PublicationResource::collection($publications);
     }
 
     /**
-     * Mostrar una publicación específica.
+     * Mostrar una publicación específica
      */
-    public function show(Publication $publication)
+    public function show(Publication $publication, Request $request)
     {
-        return response()->json($publication);
+        // Permitimos que también pueda incluir relaciones en show
+        $publication->load(
+            collect(explode(',', $request->query('include', '')))
+                ->filter()
+                ->all()
+        );
+
+        return new PublicationResource($publication);
     }
 
     /**
-     * Crear una nueva publicación.
+     * Crear una nueva publicación
      */
     public function store(Request $request)
     {
@@ -46,11 +55,11 @@ class PublicationController extends Controller
 
         $publication = Publication::create($validated);
 
-        return response()->json($publication, 201);
+        return new PublicationResource($publication);
     }
 
     /**
-     * Actualizar una publicación existente.
+     * Actualizar una publicación existente
      */
     public function update(Request $request, Publication $publication)
     {
@@ -67,11 +76,11 @@ class PublicationController extends Controller
 
         $publication->update($validated);
 
-        return response()->json($publication);
+        return new PublicationResource($publication);
     }
 
     /**
-     * Eliminar una publicación.
+     * Eliminar una publicación
      */
     public function destroy(Publication $publication)
     {
