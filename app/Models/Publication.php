@@ -2,109 +2,100 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Publication extends Model
 {
+    use HasFactory;
 
-    protected $table = 'publications';
-    protected $primaryKey = 'publication_id';
-
+    // Campos que se pueden asignar masivamente
     protected $fillable = [
-        'title_publication',
-        'type_publication',
-        'severity_publication',
-        'location_publication',
-        'description_publication',
+        'title',
+        'type',
+        'severity',
+        'location',
+        'description',
         'url_imagen',
-        'date_publication',
-        'profile_id',
+        'date',
+        'profile_id'
     ];
+
+    // Listas para filtros dinámicos
+    protected $allowIncluded = ['profile', 'categories', 'profile.user'];
+    protected $allowFilter = ['id', 'title', 'type', 'severity', 'location', 'date', 'profile_id'];
+    protected $allowSort = ['id', 'title', 'date', 'created_at'];
 
     // Relaciones
     public function profile()
     {
-        return $this->belongsTo(Profile::class, 'profile_id', 'id_role_user');
+        return $this->belongsTo(Profile::class, 'profile_id');
     }
 
     public function categories()
     {
-        return $this->belongsToMany(Category::class, 'publications_categories', 'publication_id', 'category_id');
+        return $this->belongsToMany(Category::class, 'publication_categories', 'publication_id', 'category_id');
     }
 
-    public function notifications()
+    // Scopes
+    public function scopeIncluded(Builder $query)
     {
-        return $this->hasMany(Notification::class, 'publication_id', 'publication_id');
+        if (empty(request('included'))) return;
+
+        $relations = explode(',', request('included'));
+        $allowIncluded = collect($this->allowIncluded);
+
+        $filteredRelations = array_filter($relations, fn($relation) => $allowIncluded->contains($relation));
+
+        if (!empty($filteredRelations)) {
+            $query->with($filteredRelations);
+        }
     }
 
-    // Scope para incluir relaciones
-    public function scopeInclude($query, $includes)
+    public function scopeFilter(Builder $query)
     {
-        if (empty($includes)) {
-            return $query;
-        }
+        if (empty(request('filter'))) return;
 
-        // Si viene como string separado por comas, lo convertimos en array
-        if (is_string($includes)) {
-            $includes = explode(',', $includes);
-        }
+        $filters = request('filter');
+        $allowFilter = collect($this->allowFilter);
 
-        $allowedIncludes = ['profile', 'categories', 'notifications'];
-
-        foreach ($includes as $include) {
-            if (in_array($include, $allowedIncludes)) {
-                $query->with($include);
+        foreach ($filters as $filter => $value) {
+            if ($allowFilter->contains($filter)) {
+                $query->where($filter, 'LIKE', "%{$value}%");
             }
         }
-
-        return $query;
     }
 
-    // Scope para filtrar resultados
-    public function scopeFilter($query, $filters)
+    public function scopeSort(Builder $query)
     {
-        // Si los filtros vienen dentro de "filter", entramos ahí
-        if (isset($filters['filter'])) {
-            $filters = $filters['filter'];
+        if (empty(request('sort'))) return;
+
+        $sortFields = explode(',', request('sort'));
+        $allowSort = collect($this->allowSort);
+
+        foreach ($sortFields as $sortField) {
+            $direction = 'asc';
+
+            if (substr($sortField, 0, 1) === '-') {
+                $direction = 'desc';
+                $sortField = substr($sortField, 1);
+            }
+
+            if ($allowSort->contains($sortField)) {
+                $query->orderBy($sortField, $direction);
+            }
         }
-
-        if (isset($filters['title'])) {
-            $query->where('title_publication', 'like', '%' . $filters['title'] . '%');
-        }
-
-        if (isset($filters['type'])) {
-            $query->where('type_publication', $filters['type']);
-        }
-
-        if (isset($filters['severity'])) {
-            $query->where('severity_publication', $filters['severity']);
-        }
-
-        if (isset($filters['location'])) {
-            $query->where('location_publication', 'like', '%' . $filters['location'] . '%');
-        }
-
-        return $query;
-      
-    use HasFactory;
-
-    protected $fillable = [
-        'title_publication','type_publication','severity_publication',
-        'location_publication','description_publication','url_imagen',
-        'date_publication','profile_id'
-    ];
-
-    public function profile() {
-        return $this->belongsTo(Profile::class);
     }
 
-    public function categories() {
-        return $this->belongsToMany(Category::class, 'publications_categories');
-    }
-
-    public function notifications() {
-        return $this->hasMany(Notification::class);
-
+    public function scopeGetOrPaginate(Builder $query)
+    {
+        if (request('perPage')) {
+            $perPage = intval(request('perPage'));
+            if ($perPage > 0) {
+                return $query->paginate($perPage);
+            }
+        }
+        return $query->get();
     }
 }

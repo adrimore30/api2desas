@@ -2,90 +2,104 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Publication;
 use Illuminate\Http\Request;
-use App\Http\Resources\PublicationResource;
+use App\Models\Publication;
 
 class PublicationController extends Controller
 {
     /**
-     * Listar todas las publicaciones con filtros e includes
+     * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index()
     {
-        $publications = Publication::query()
-            ->include($request->query('include'))
-            ->filter($request->query())
-            ->get();
+        $publications = Publication::included()
+            ->filter()
+            ->sort()
+            ->getOrPaginate();
 
-        // Usamos el resource para devolver campos con nombres bonitos
-        return PublicationResource::collection($publications);
+        return response()->json([
+            'status' => 'success',
+            'data' => $publications
+        ], 200);
     }
 
     /**
-     * Mostrar una publicación específica
-     */
-    public function show(Publication $publication, Request $request)
-    {
-        // Permitimos que también pueda incluir relaciones en show
-        $publication->load(
-            collect(explode(',', $request->query('include', '')))
-                ->filter()
-                ->all()
-        );
-
-        return new PublicationResource($publication);
-    }
-
-    /**
-     * Crear una nueva publicación
+     * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title_publication' => 'required|string|max:255',
-            'type_publication' => 'required|string|max:100',
-            'severity_publication' => 'required|string|max:100',
-            'location_publication' => 'required|string|max:255',
-            'description_publication' => 'required|string',
-            'url_imagen' => 'nullable|string',
-            'date_publication' => 'required|date',
-            'profile_id' => 'required|exists:profiles,id_role_user',
+            'title' => 'required|max:255',
+            'content' => 'required',
+            'profile_id' => 'required|exists:profiles,id',
+            'categories' => 'array',
+            'categories.*' => 'exists:categories,id'
         ]);
 
         $publication = Publication::create($validated);
 
-        return new PublicationResource($publication);
+        // Sincronizar categorías si se envían
+        if (!empty($validated['categories'])) {
+            $publication->categories()->sync($validated['categories']);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Publication created successfully',
+            'data' => $publication->load('categories', 'profile')
+        ], 201);
     }
 
     /**
-     * Actualizar una publicación existente
+     * Display the specified resource.
+     */
+    public function show($id)
+    {
+        $publication = Publication::included()->findOrFail($id);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $publication
+        ], 200);
+    }
+
+    /**
+     * Update the specified resource in storage.
      */
     public function update(Request $request, Publication $publication)
     {
         $validated = $request->validate([
-            'title_publication' => 'sometimes|string|max:255',
-            'type_publication' => 'sometimes|string|max:100',
-            'severity_publication' => 'sometimes|string|max:100',
-            'location_publication' => 'sometimes|string|max:255',
-            'description_publication' => 'sometimes|string',
-            'url_imagen' => 'nullable|string',
-            'date_publication' => 'sometimes|date',
-            'profile_id' => 'sometimes|exists:profiles,id_role_user',
+            'title' => 'sometimes|required|max:255',
+            'content' => 'sometimes|required',
+            'profile_id' => 'sometimes|required|exists:profiles,id',
+            'categories' => 'sometimes|array',
+            'categories.*' => 'exists:categories,id'
         ]);
 
         $publication->update($validated);
 
-        return new PublicationResource($publication);
+        // Si se envían categorías, sincronizamos
+        if (isset($validated['categories'])) {
+            $publication->categories()->sync($validated['categories']);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Publication updated successfully',
+            'data' => $publication->load('categories', 'profile')
+        ], 200);
     }
 
     /**
-     * Eliminar una publicación
+     * Remove the specified resource from storage.
      */
     public function destroy(Publication $publication)
     {
         $publication->delete();
 
-        return response()->json(null, 204);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Publication deleted successfully'
+        ], 200);
     }
 }

@@ -13,13 +13,13 @@ return new class extends Migration
     {
         Schema::create('publications', function (Blueprint $table) {
             $table->id();
-            $table->string('title_publication');
-            $table->string('type_publication');
-            $table->string('severity_publication');
-            $table->string('location_publication');
-            $table->text('description_publication');
+            $table->string('title');
+            $table->string('type');
+            $table->string('severity');
+            $table->string('location');
+            $table->text('description');
             $table->string('url_imagen')->nullable();
-            $table->dateTime('date_publication');
+            $table->dateTime('date');
             $table->foreignId('profile_id')->constrained('profiles')->cascadeOnDelete();
             $table->timestamps();
         });
