@@ -52,6 +52,10 @@ class Profile extends Model
     {
         return $this->hasMany(Message::class, 'profile_id');
     }
+    public function scopeWithUserAndRole($query)
+    {
+        return $query->with(['user', 'role']);
+    }
 
     /* ---------- SCOPES  ---------- */
     public function scopeIncluded(Builder $query)

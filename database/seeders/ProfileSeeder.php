@@ -2,47 +2,25 @@
 
 namespace Database\Seeders;
 
-use App\Models\Profile;
-use App\Models\User;
-use App\Models\Role;
 use Illuminate\Database\Seeder;
+use App\Models\Profile;
 
 class ProfileSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // 1. Obtener usuarios y roles existentes
-        $users = User::all();
-        $roles = Role::all();
+        Profile::create([
+            'password' => bcrypt('123456'),
+            'photo' => 'default.png',
+            'user_id' => 1,
+            'role_id' => 1,
+        ]);
 
-        // 2. Verificar que existan ambos antes de continuar
-        if ($users->isEmpty() || $roles->isEmpty()) {
-            $this->command->warn('⚠️ Asegúrate de ejecutar UserSeeder y RoleSeeder antes de ProfileSeeder.');
-            return;
-        }
-
-        // 3. Definir algunos valores por defecto para la foto y contraseña
-        $defaultPassword = bcrypt('password123');
-        $defaultPhoto = 'default.jpg';
-
-        // 4. Crear un perfil para cada usuario
-        foreach ($users as $user) {
-            // Evitar duplicados: solo crear si el usuario no tiene perfil
-            if (!$user->profile()->exists()) {
-                Profile::create([
-                    'user_id'  => $user->id,
-                    'role_id'  => $roles->random()->id,
-                    'password' => $defaultPassword,
-                    'photo'    => $defaultPhoto,
-                ]);
-            }
-        }
-
-        // 5. Mensaje de confirmación
-        $count = Profile::count();
-        $this->command->info("✅ Se crearon {$count} perfiles exitosamente.");
+        Profile::create([
+            'password' => bcrypt('654321'),
+            'photo' => 'avatar2.png',
+            'user_id' => 2,
+            'role_id' => 2,
+        ]);
     }
 }

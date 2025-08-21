@@ -7,55 +7,68 @@ use Illuminate\Http\Request;
 
 class ProfileController extends Controller
 {
-    
+    // Listar todos los perfiles
     public function index()
     {
-        $profiles = Profile::included()
-            ->filter()
-            ->sort()
-            ->getOrPaginate();
+       $profiles = Profile::with(['user', 'role'])->get();
 
-        return response()->json($profiles);
+        return response()->json([
+            'message' => 'Perfiles obtenidos correctamente',
+            'data' => $profiles
+        ], 200);
     }
 
+    // Crear un nuevo perfil
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'password' => 'required|string|min:6',
-            'photo'    => 'nullable|string',
-            'user_id'  => 'required|exists:users,id',
-            'role_id'  => 'required|exists:roles,id',
+            'photo' => 'nullable|string',
+            'user_id' => 'required|integer',
+            'role_id' => 'required|integer',
         ]);
 
-        $profile = Profile::create($request->all());
+        $profile = Profile::create($validated);
 
-        return response()->json($profile, 201);
+        return response()->json([
+            'message' => 'Perfil creado correctamente',
+            'data' => $profile
+        ], 201);
     }
 
+    // Mostrar un perfil específico
     public function show($id)
     {
-        $profile = Profile::included()->findOrFail($id);
-        return response()->json($profile);
+        $profile = Profile::findOrFail($id);
+        return response()->json($profile, 200);
     }
 
-    public function update(Request $request, Profile $profile)
+    // Modificar un perfil existente
+    public function update(Request $request, $id)
     {
-        $request->validate([
-            'password' => 'sometimes|string|min:6',
-            'photo'    => 'nullable|string',
-            'user_id'  => 'sometimes|exists:users,id',
-            'role_id'  => 'sometimes|exists:roles,id',
+        $profile = Profile::findOrFail($id);
+
+        $validated = $request->validate([
+            'password' => 'nullable|string|min:6',
+            'photo' => 'nullable|string',
+            'user_id' => 'nullable|integer',
+            'role_id' => 'nullable|integer',
         ]);
 
-        $profile->update($request->all());
+        $profile->update($validated);
 
-        return response()->json($profile);
+        return response()->json([
+            'message' => 'Perfil actualizado correctamente',
+            'data' => $profile
+        ], 200);
     }
 
-    public function destroy(Profile $profile)
+    // Eliminar un perfil
+    public function destroy($id)
     {
+        $profile = Profile::findOrFail($id);
         $profile->delete();
-        return response()->json($profile);
-    }
 
+        return response()->json(['message' => 'Perfil eliminado correctamente'], 200);
+    }
 }

@@ -19,8 +19,8 @@ class DatabaseSeeder extends Seeder
         UserSeeder::class,
         CategorySeeder::class,
         ProfileSeeder::class,
-        PublicationSeeder::class,
-        PublicationCategorySeeder::class,
+        // PublicationSeeder::class,
+        // PublicationCategorySeeder::class,
         MessageSeeder::class,
         NotificationSeeder::class,
     ]);
